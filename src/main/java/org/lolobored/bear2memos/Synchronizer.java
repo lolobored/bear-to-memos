@@ -112,12 +112,18 @@ public class Synchronizer implements ApplicationRunner {
         for (Sync sync : syncs) {
             if (!memosNoteIds.contains(sync.getMemosId())){
                 BearNote bearNote= bearNotesById.get(sync.getBearId());
-                String content="Created: "+bearNote.getCreationDate()+"\n";
-                content+="Modified: "+bearNote.getUpdateDate()+"\n\n";
-                content+=bearNote.getText();
-                FileUtils.writeStringToFile(new File(deletedFolder.getAbsolutePath()+"/deleted-"+deleted+".md"), content, Charset.defaultCharset() );
-                deleted++;
-                syncRepository.save(sync);
+                if (bearNote != null) {
+                    String content = "Created: " + bearNote.getCreationDate() + "\n";
+                    content += "Modified: " + bearNote.getUpdateDate() + "\n\n";
+                    content += bearNote.getText();
+                    FileUtils.writeStringToFile(new File(deletedFolder.getAbsolutePath() + "/deleted-" + deleted + ".md"), content, Charset.defaultCharset());
+                    deleted++;
+                    syncRepository.save(sync);
+                }
+                // else there was no equivalent in bear
+                else{
+                    syncRepository.delete(sync);
+                }
             }
         }
 
@@ -131,13 +137,12 @@ public class Synchronizer implements ApplicationRunner {
 
         for (Sync sync : syncs) {
             // check if bearNotes exists
-            BearNote bearNote = bearNotes.getOrDefault(sync.getBearId(), deletedNote);
-            if (bearNote.isDeleted()){
+            BearNote bearNote = bearNotes.get(sync.getBearId());
+            if (bearNote==null || bearNote.isDeleted()){
                 memosService.deleteNote(memosUrl,
                         memosToken,
                         sync.getMemosId());
-                sync.setDeleted(true);
-                syncRepository.save(sync);
+                syncRepository.delete(sync);
             }
         }
     }

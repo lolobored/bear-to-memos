@@ -150,7 +150,9 @@ public class MemosServiceImpl implements MemosService {
             }
 
             for (Map.Entry<String, String> entrySet : attachmentsToReplace.entrySet()) {
-                memosNote.setContent(Strings.CS.replace(memosNote.getContent(),"("+entrySet.getKey()+")", "("+entrySet.getValue()+")"));
+                String key = entrySet.getKey().replace('\u202f', ' ');
+                String content= memosNote.getContent().replace("%E2%80%AF", " ");
+                memosNote.setContent(Strings.CS.replace(content,"("+key+")", "("+entrySet.getValue()+")"));
             }
             memosNote.setAttachments(memosAttachments);
 
